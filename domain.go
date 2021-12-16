@@ -1,9 +1,13 @@
 package blog
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Article struct {
-	Id       int       `json:"id"`
+	Id       uuid.UUID `json:"id"`
 	Title    string    `json:"title"`
 	Body     string    `json:"body"`
 	PostedAt time.Time `json:"posted_at"`

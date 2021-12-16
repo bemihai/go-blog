@@ -3,10 +3,11 @@ package main
 import (
 	"blog"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -18,9 +19,9 @@ type Handler struct {
 // Articles repository interface.
 type ArticlesRepository interface {
 	ListArticles() ([]blog.Article, error)
-	GetArticleById(id int) (blog.Article, error)
+	GetArticleById(id uuid.UUID) (blog.Article, error)
 	PostArticle(a blog.Article) (blog.Article, error)
-	DeleteArticleById(id int) (blog.Article, error)
+	DeleteArticleById(id uuid.UUID) (blog.Article, error)
 	DeleteAuthorByNameAndEmail(name string, email string) (blog.Author, error)
 }
 
@@ -37,6 +38,7 @@ func (h *Handler) ListArticles(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	w.Write(data)
 
 }
@@ -44,22 +46,29 @@ func (h *Handler) ListArticles(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetArticleById(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	article, err := h.Repository.GetArticleById(id)
+	var dberr blog.DatabaseError
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		if errors.As(err, &dberr) {
+			http.Error(w, dberr.Message, http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
+
 	data, err := json.Marshal(article)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	w.Write(data)
 
 }
@@ -93,16 +102,23 @@ func (h *Handler) DeleteArticleById(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	article, err := h.Repository.DeleteArticleById(id)
+	var dberr blog.DatabaseError
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		if errors.As(err, &dberr) {
+			http.Error(w, dberr.Message, http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
 	}
+
 	data, err := json.Marshal(article)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

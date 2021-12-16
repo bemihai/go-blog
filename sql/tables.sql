@@ -1,22 +1,20 @@
-create database blog;
+CREATE DATABASE blog;
 
-create schema if not exists blog;   
+CREATE SCHEMA IF NOT EXISTS blog;   
 
-create table blog.authors (
-	id serial,
-	name varchar(36) not null,
-	email varchar(36),
-	primary key (id)
+CREATE TABLE blog.authors (
+	id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+	name TEXT NOT NULL,
+	email TEXT NOT NULL
 );
 
-create table blog.articles (
-	id serial,
-	title varchar(255) not null,
-	body varchar(255) not null,
-	posted_at timestamp not null default now(),
-	author_id int not null,
-	primary key (id),
-	foreign key (author_id)
-		references authors(id)
-		on delete cascade
+CREATE TABLE blog.articles (
+	id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+	title TEXT NOT NULL,
+	body TEXT NOT NULL,
+	posted_at TIMESTAMP NOT NULL DEFAULT NOW(),
+	author_id uuid NOT NULL,
+	FOREIGN KEY (author_id)
+		REFERENCES blog.authors(id)
+		ON DELETE CASCADE
 );

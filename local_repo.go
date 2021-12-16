@@ -1,6 +1,10 @@
 package blog
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/google/uuid"
+)
 
 type LocalRepository struct {
 	DB []Article
@@ -16,7 +20,7 @@ func (repo *LocalRepository) ListArticles() ([]Article, error) {
 }
 
 // Get article by id.
-func (repo *LocalRepository) GetArticleById(id int) (Article, error) {
+func (repo *LocalRepository) GetArticleById(id uuid.UUID) (Article, error) {
 	for _, article := range repo.DB {
 		if article.Id == id {
 			return article, nil
@@ -32,7 +36,7 @@ func (repo *LocalRepository) PostArticle(a Article) (Article, error) {
 }
 
 // Delete article by id.
-func (repo *LocalRepository) DeleteArticleById(id int) (Article, error) {
+func (repo *LocalRepository) DeleteArticleById(id uuid.UUID) (Article, error) {
 	for index, article := range repo.DB {
 		if article.Id == id {
 			repo.DB = append(repo.DB[:index], repo.DB[index+1:]...)
