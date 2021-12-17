@@ -54,8 +54,12 @@ func (h *Handler) ListArticles(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
 		return
 	}
-	w.Write(data)
 
+	_, err = w.Write(data)
+	if err != nil {
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Handler) GetArticleById(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +86,11 @@ func (h *Handler) GetArticleById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write(data)
+	_, err = w.Write(data)
+	if err != nil {
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
 
 }
 
@@ -115,7 +123,11 @@ func (h *Handler) AddArticle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
 		return
 	}
-	w.Write(data)
+	_, err = w.Write(data)
+	if err != nil {
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Handler) DeleteArticleById(w http.ResponseWriter, r *http.Request) {
