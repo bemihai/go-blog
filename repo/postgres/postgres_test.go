@@ -1,6 +1,8 @@
-package blog
+package postgres
 
 import (
+	repo "blog/repo"
+
 	"database/sql"
 	"errors"
 	"log"
@@ -12,12 +14,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var auth = &Author{
+var auth = &repo.Author{
 	Name:  "John Doe",
 	Email: "john.doe@email.com",
 }
 
-var art = &Article{
+var art = &repo.Article{
 	Id:       uuid.New(),
 	Title:    "Test title",
 	Body:     "Test body",
@@ -41,15 +43,13 @@ func TestListArticles(t *testing.T) {
 	repo := &PSQLRepository{db}
 	defer db.Close()
 
-	listArticlesQuery := `SELECT art.id, art.title, art.body, art.posted_at, auth.name, auth.email
-						FROM blog.articles art
-						LEFT JOIN blog.authors auth on art.author_id = auth.id;`
+	query := `SELECT a.id, a.title, a.body, a.posted_at, a.author_id FROM blog.articles a;`
 
 	rows := sqlmock.NewRows([]string{"id", "title", "body", "posted_at", "name", "email"}).
 		AddRow(art.Id, art.Title, art.Body, art.PostedAt, art.Author.Name, art.Author.Email).
 		AddRow(art.Id, art.Title, art.Body, art.PostedAt, art.Author.Name, art.Author.Email)
 
-	mock.ExpectQuery(listArticlesQuery).WillReturnRows(rows)
+	mock.ExpectQuery(query).WillReturnRows(rows)
 
 	articles, err := repo.ListArticles()
 
@@ -64,9 +64,10 @@ func TestListArticlesEmpty(t *testing.T) {
 	repo := &PSQLRepository{db}
 	defer db.Close()
 
+	query := `SELECT a.id, a.title, a.body, a.posted_at, a.author_id FROM blog.articles a;`
 	rows := sqlmock.NewRows([]string{"id", "title", "body", "posted_at", "name", "email"})
 
-	mock.ExpectQuery(listArticlesQuery).WillReturnRows(rows)
+	mock.ExpectQuery(query).WillReturnRows(rows)
 
 	articles, err := repo.ListArticles()
 
@@ -83,7 +84,8 @@ func TestListArticlesDatabaseError(t *testing.T) {
 	defer db.Close()
 
 	dbError := errors.New("database error")
-	mock.ExpectQuery(listArticlesQuery).WillReturnError(dbError)
+	query := `SELECT a.id, a.title, a.body, a.posted_at, a.author_id FROM blog.articles a;`
+	mock.ExpectQuery(query).WillReturnError(dbError)
 
 	_, err := repo.ListArticles()
 	targetErr := &DatabaseError{}

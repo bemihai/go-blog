@@ -1,7 +1,8 @@
 package main
 
 import (
-	"blog"
+	repo "blog/repo"
+	db "blog/repo/postgres"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,24 +14,27 @@ import (
 
 // Handler is responsible to answer to http request.
 type Handler struct {
-	Repository ArticlesRepository
-}
-
-// Articles repository interface.
-type ArticlesRepository interface {
-	ListArticles() ([]blog.Article, error)
-	GetArticleById(id uuid.UUID) (blog.Article, error)
-	PostArticle(a blog.Article) (blog.Article, error)
-	DeleteArticleById(id uuid.UUID) (blog.Article, error)
-	DeleteAuthorByNameAndEmail(name string, email string) (blog.Author, error)
+	Repository repo.Repository
 }
 
 func (h *Handler) ListArticles(w http.ResponseWriter, r *http.Request) {
 
+	// get articles
 	articles, err := h.Repository.ListArticles()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
+	}
+
+	// for each article, get its author
+	for i := range articles {
+		auth, err := h.Repository.GetAuthorById(articles[i].Author.Id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		articles[i].Author.Name = auth.Name
+		articles[i].Author.Email = auth.Email
 	}
 
 	data, err := json.Marshal(articles)
@@ -53,7 +57,7 @@ func (h *Handler) GetArticleById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	article, err := h.Repository.GetArticleById(id)
-	var dberr blog.DatabaseError
+	var dberr db.DatabaseError
 	if err != nil {
 		if errors.As(err, &dberr) {
 			http.Error(w, dberr.Message, http.StatusNotFound)
@@ -73,28 +77,35 @@ func (h *Handler) GetArticleById(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *Handler) PostArticle(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) AddArticle(w http.ResponseWriter, r *http.Request) {
 
-	var article blog.Article
+	var article repo.Article
 
-	// decode the request body into the Article struct
+	// decode the request body into an Article
 	err := json.NewDecoder(r.Body).Decode(&article)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	a, err := h.Repository.PostArticle(article)
+	// add Author field in blog.authors table
+	article.Author.Id, err = h.Repository.AddAuthor(article.Author)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 	}
+
+	// add Article in blog.articles table
+	a, err := h.Repository.AddArticle(article)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+	}
+
 	data, err := json.Marshal(a)
 	if err != nil {
 		http.Error(w, "Internal error.", http.StatusInternalServerError)
 		return
 	}
 	w.Write(data)
-
 }
 
 func (h *Handler) DeleteArticleById(w http.ResponseWriter, r *http.Request) {
@@ -108,8 +119,8 @@ func (h *Handler) DeleteArticleById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	article, err := h.Repository.DeleteArticleById(id)
-	var dberr blog.DatabaseError
+	err = h.Repository.DeleteArticleById(id)
+	var dberr db.DatabaseError
 	if err != nil {
 		if errors.As(err, &dberr) {
 			http.Error(w, dberr.Message, http.StatusNotFound)
@@ -118,14 +129,6 @@ func (h *Handler) DeleteArticleById(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
-	data, err := json.Marshal(article)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Write(data)
-
 }
 
 func (h *Handler) DeleteAuthorByNameAndEmail(w http.ResponseWriter, r *http.Request) {
@@ -137,17 +140,10 @@ func (h *Handler) DeleteAuthorByNameAndEmail(w http.ResponseWriter, r *http.Requ
 
 	fmt.Printf("name: %s, email: %s ", name, email)
 
-	article, err := h.Repository.DeleteAuthorByNameAndEmail(name, email)
+	err := h.Repository.DeleteAuthorByNameAndEmail(name, email)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 	}
-	data, err := json.Marshal(article)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Write(data)
-
 }
 
 // Handles not allowed requests on existing endpoints.

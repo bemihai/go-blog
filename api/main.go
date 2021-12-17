@@ -1,7 +1,7 @@
 package main
 
 import (
-	"blog"
+	"blog/repo/postgres"
 	"database/sql"
 	"fmt"
 	"log"
@@ -22,18 +22,12 @@ const (
 
 func main() {
 
-	// define handler for http requests with local repository
-	// var database []blog.Article
-	// handler := Handler{
-	// 	Repository: &blog.LocalRepository{DB: database},
-	// }
-
 	// define handler for http requests with postgres repository
 	database := psqlConnect(host, port, user, password, dbname)
 	defer database.Close()
 
 	handler := Handler{
-		Repository: &blog.PSQLRepository{DB: database},
+		Repository: &postgres.PSQLRepository{DB: database},
 	}
 
 	// define the associations between endpoints and handlers
@@ -46,7 +40,7 @@ func main() {
 	router.Handle("/articles/{id}", http.HandlerFunc(handler.GetArticleById)).Methods(http.MethodGet)
 
 	// define handler for POST on "/articles" endpoint
-	router.Handle("/articles", http.HandlerFunc(handler.PostArticle)).Methods(http.MethodPost)
+	router.Handle("/articles", http.HandlerFunc(handler.AddArticle)).Methods(http.MethodPost)
 
 	// define handler for DELETE on "/articles/id" endpoint
 	router.Handle("/articles/{id}", http.HandlerFunc(handler.DeleteArticleById)).Methods(http.MethodDelete)
