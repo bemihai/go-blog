@@ -167,5 +167,9 @@ func (h *Handler) DeleteAuthorByNameAndEmail(w http.ResponseWriter, r *http.Requ
 // Handles not allowed requests on existing endpoints.
 func MethodNotAllowed(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusMethodNotAllowed)
-	w.Write([]byte("Method not allowed."))
+	_, err := w.Write([]byte("Method not allowed."))
+	if err != nil {
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
 }
