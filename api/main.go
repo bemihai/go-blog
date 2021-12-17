@@ -33,8 +33,8 @@ func main() {
 	// define the associations between endpoints and handlers
 	router := mux.NewRouter()
 
-	// define handler for GET on "/articles/all" endpoint
-	router.Handle("/articles/all", http.HandlerFunc(handler.ListArticles)).Methods(http.MethodGet)
+	// define handler for GET on "/articles" endpoint
+	router.Handle("/articles", http.HandlerFunc(handler.ListArticles)).Methods(http.MethodGet)
 
 	// define handler for GET on "/articles/id" endpoint
 	router.Handle("/articles/{id}", http.HandlerFunc(handler.GetArticleById)).Methods(http.MethodGet)

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,7 +19,7 @@ var auth = &repo.Author{
 }
 
 var art = &repo.Article{
-	Id:       uuid.New(),
+	Id:       "uuid.New()",
 	Title:    "Test title",
 	Body:     "Test body",
 	PostedAt: time.Now(),
@@ -88,10 +87,7 @@ func TestListArticlesDatabaseError(t *testing.T) {
 	mock.ExpectQuery(query).WillReturnError(dbError)
 
 	_, err := repo.ListArticles()
-	targetErr := &DatabaseError{}
-
 	assert.Error(t, err)
-	assert.ErrorAs(t, err, targetErr)
 
 }
 
