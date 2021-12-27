@@ -1,107 +1,103 @@
 package postgres
 
 import (
-	repo "blog/repo"
+	"fmt"
 
-	"database/sql"
-	"errors"
-	"log"
 	"testing"
-	"time"
 
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-var auth = &repo.Author{
-	Name:  "John Doe",
-	Email: "john.doe@email.com",
-}
+const (
+	host     = "localhost"
+	port     = 5432
+	user     = "postgres"
+	password = "postgres"
+	dbname   = "blog"
+)
 
-var art = &repo.Article{
-	Id:       "uuid.New()",
-	Title:    "Test title",
-	Body:     "Test body",
-	PostedAt: time.Now(),
-	Author:   *auth,
-}
-
-// Mock database connection.
-func NewMock() (*sql.DB, sqlmock.Sqlmock) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		log.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-
-	return db, mock
-}
+var connection = fmt.Sprintf("postgres://%s:%d/%s?user=%s&password=%s&sslmode=disable", host, port, dbname, user, password)
 
 func TestListArticles(t *testing.T) {
 
-	db, mock := NewMock()
-	repo := &PSQLRepository{db}
-	defer db.Close()
+	db, _ := createTestDB(t, connection)
+	repo := PSQLRepository{DB: db}
 
-	query := `SELECT a.id, a.title, a.body, a.posted_at, a.author_id FROM blog.articles a;`
-
-	rows := sqlmock.NewRows([]string{"id", "title", "body", "posted_at", "name", "email"}).
-		AddRow(art.Id, art.Title, art.Body, art.PostedAt, art.Author.Name, art.Author.Email).
-		AddRow(art.Id, art.Title, art.Body, art.PostedAt, art.Author.Name, art.Author.Email)
-
-	mock.ExpectQuery(query).WillReturnRows(rows)
-
+	// table containing 2 entries
+	dumpTestData(t, db)
 	articles, err := repo.ListArticles()
+	require.NotEmpty(t, articles)
+	require.NoError(t, err)
+	require.Len(t, articles, 2)
 
-	assert.NotNil(t, articles)
-	assert.NoError(t, err)
-	assert.Len(t, articles, 2)
+	// empty table
+	truncateTables(t, db)
+	articles, err = repo.ListArticles()
+	require.Empty(t, articles)
+	require.NoError(t, err)
+	require.Len(t, articles, 0)
 }
 
-func TestListArticlesEmpty(t *testing.T) {
+func TestListAuthors(t *testing.T) {
 
-	db, mock := NewMock()
-	repo := &PSQLRepository{db}
-	defer db.Close()
+	db, _ := createTestDB(t, connection)
+	repo := PSQLRepository{DB: db}
 
-	query := `SELECT a.id, a.title, a.body, a.posted_at, a.author_id FROM blog.articles a;`
-	rows := sqlmock.NewRows([]string{"id", "title", "body", "posted_at", "name", "email"})
+	// table containing 2 entries
+	dumpTestData(t, db)
+	authors, err := repo.ListAuthors()
+	require.NotEmpty(t, authors)
+	require.NoError(t, err)
+	require.Len(t, authors, 2)
 
-	mock.ExpectQuery(query).WillReturnRows(rows)
-
-	articles, err := repo.ListArticles()
-
-	assert.Empty(t, articles)
-	assert.NoError(t, err)
-	assert.Len(t, articles, 0)
-
+	// empty table
+	truncateTables(t, db)
+	authors, err = repo.ListAuthors()
+	require.Empty(t, authors)
+	require.NoError(t, err)
+	require.Len(t, authors, 0)
 }
 
-func TestListArticlesDatabaseError(t *testing.T) {
+func TestGetArticleById(t *testing.T) {
 
-	db, mock := NewMock()
-	repo := &PSQLRepository{db}
-	defer db.Close()
+	db, _ := createTestDB(t, connection)
+	repo := PSQLRepository{DB: db}
 
-	dbError := errors.New("database error")
-	query := `SELECT a.id, a.title, a.body, a.posted_at, a.author_id FROM blog.articles a;`
-	mock.ExpectQuery(query).WillReturnError(dbError)
+	dumpTestData(t, db)
 
-	_, err := repo.ListArticles()
-	assert.Error(t, err)
+	// existing article
+	a, err := repo.GetArticleById("b4a4de9e-2f52-4cf1-8907-3d828d403126")
+	require.NotEmpty(t, a)
+	require.NoError(t, err)
+	require.Equal(t, a.Title, "Test title 1")
 
+	// invalid uuid
+	_, err = repo.GetArticleById("invalid uuid")
+	require.Error(t, err)
+
+	// non-existing article
+	_, err = repo.GetArticleById("b4a4de9e-2f52-4cf1-8907-3d828d403128")
+	require.ErrorIs(t, err, ErrArticleNotFound)
 }
 
-// TODO: simplify queries in repository, it's hard to test multiple queries in one call
-// func TestPostArticle(t *testing.T) {
+func TestGetAuthorById(t *testing.T) {
 
-// 	db, mock := NewMock()
-// 	repo := &PSQLRepository{db}
-// 	defer db.Close()
+	db, _ := createTestDB(t, connection)
+	repo := PSQLRepository{DB: db}
 
-// 	prep := mock.ExpectPrepare(addArticleQuery)
-// 	prep.ExpectExec().WithArgs(art).WillReturnResult(sqlmock.NewResult(1, 0))
+	dumpTestData(t, db)
 
-// 	_, err := repo.PostArticle(*art)
+	// existing author
+	a, err := repo.GetAuthorById("b4a4de9e-2f52-4cf1-8907-3d828d403124")
+	require.NotEmpty(t, a)
+	require.NoError(t, err)
+	require.Equal(t, a.Name, "Test Author1")
 
-// 	assert.NoError(t, err)
-// }
+	// invalid uuid
+	_, err = repo.GetAuthorById("invalid uuid")
+	require.Error(t, err)
+
+	// non-existing author
+	_, err = repo.GetAuthorById("b4a4de9e-2f52-4cf1-8907-3d828d403128")
+	require.ErrorIs(t, err, ErrAuthorNotFound)
+}

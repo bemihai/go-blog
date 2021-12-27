@@ -18,12 +18,13 @@ const (
 	user     = "postgres"
 	password = "postgres"
 	dbname   = "blog"
+	schema   = "blog"
 )
 
 func main() {
 
 	// define handler for http requests with postgres repository
-	database := psqlConnect(host, port, user, password, dbname)
+	database := psqlConnect(host, port, user, password, dbname, schema)
 	defer database.Close()
 
 	handler := Handler{
@@ -73,10 +74,10 @@ func main() {
 }
 
 // Connects to a postgres database.
-func psqlConnect(host string, port int, user string, password string, dbname string) *sql.DB {
+func psqlConnect(host string, port int, user string, password string, dbname string, schema string) *sql.DB {
 
-	psqlConString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+	psqlConString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable search_path=%s",
+		host, port, user, password, dbname, schema)
 
 	db, err := sql.Open("postgres", psqlConString)
 	if err != nil {
@@ -88,6 +89,6 @@ func psqlConnect(host string, port int, user string, password string, dbname str
 		panic(err)
 	}
 
-	fmt.Println("Successfully connected to postgres DB!")
+	fmt.Println("Successfully connected to postgres!")
 	return db
 }
