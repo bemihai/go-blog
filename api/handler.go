@@ -75,8 +75,16 @@ func (h *Handler) GetArticleById(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, db.ErrArticleNotFound) {
 			http.Error(w, "Article not found.", http.StatusNotFound)
+			return
 		}
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
+
+	// get article's author
+	article.Author, err = h.Repository.GetAuthorById(article.Author.Id)
+	if err != nil {
+		http.Error(w, "Service unavailable.", http.StatusServiceUnavailable)
 		return
 	}
 
@@ -105,17 +113,27 @@ func (h *Handler) AddArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TO DO: check if author already exists: GetAuthorByNameAndEmail
-	// add Author field in blog.authors table
-	article.Author.Id, err = h.Repository.AddAuthor(article.Author)
+	// add Author field in blog.authors table if not already exists
+	author, err := h.Repository.GetAuthorByNameAndEmail(article.Author.Name, article.Author.Email)
 	if err != nil {
+		if errors.Is(err, db.ErrAuthorNotFound) {
+			article.Author.Id, err = h.Repository.AddAuthor(article.Author)
+			if err != nil {
+				http.Error(w, "Service unavailable.", http.StatusServiceUnavailable)
+				return
+			}
+		}
 		http.Error(w, "Service unavailable.", http.StatusServiceUnavailable)
+		return
+	} else {
+		article.Author.Id = author.Id
 	}
 
 	// add Article in blog.articles table
 	a, err := h.Repository.AddArticle(article)
 	if err != nil {
 		http.Error(w, "Service unavailable.", http.StatusServiceUnavailable)
+		return
 	}
 
 	data, err := json.Marshal(a)
@@ -143,6 +161,7 @@ func (h *Handler) DeleteArticleById(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, db.ErrArticleNotFound) {
 			http.Error(w, "Article not found.", http.StatusNotFound)
+			return
 		}
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
 		return
@@ -156,8 +175,9 @@ func (h *Handler) DeleteAuthorByNameAndEmail(w http.ResponseWriter, r *http.Requ
 
 	err := h.Repository.DeleteAuthorByNameAndEmail(name, email)
 	if err != nil {
-		if errors.Is(err, db.ErrArticleNotFound) {
-			http.Error(w, "Article not found.", http.StatusNotFound)
+		if errors.Is(err, db.ErrAuthorNotFound) {
+			http.Error(w, "Author not found.", http.StatusNotFound)
+			return
 		}
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
 		return

@@ -132,7 +132,7 @@ func (r *PSQLRepository) GetAuthorByNameAndEmail(name string, email string) (rep
 
 	var a repo.Author
 
-	query := `SELECT a.id FROM blog.authors a WHERE a.name = $1 AND a.email = $2;`
+	query := `SELECT a.id, a.name, a.email FROM blog.authors a WHERE a.name = $1 AND a.email = $2;`
 	row := r.DB.QueryRow(query, name, email)
 
 	switch err := row.Scan(&a.Id, &a.Name, &a.Email); err {
@@ -150,7 +150,7 @@ func (r *PSQLRepository) AddAuthor(a repo.Author) (string, error) {
 
 	var id string
 
-	// TO DO: email should be unique
+	// TO DO: email should be unique, return error if exists
 	query := `INSERT INTO blog.authors(name, email) values ($1, $2) RETURNING id;`
 	err := r.DB.QueryRow(query, a.Name, a.Email).Scan(&id)
 	if err != nil {
