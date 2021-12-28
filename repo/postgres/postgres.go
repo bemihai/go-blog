@@ -165,6 +165,7 @@ func (r *PSQLRepository) AddArticle(a repo.Article) (string, error) {
 
 	var id string
 
+	// author id must exist in the authors table
 	query := `INSERT INTO articles(title, body, author_id) values ($1, $2, $3) RETURNING id;`
 	err := r.DB.QueryRow(query, a.Title, a.Body, a.Author.Id).Scan(&id)
 	if err != nil {
