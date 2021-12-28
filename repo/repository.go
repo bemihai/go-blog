@@ -4,8 +4,8 @@ import (
 	"time"
 )
 
-// Repository represents the blog repository.
-type Repository interface {
+// BlogService represents the blog repository.
+type BlogService interface {
 	ListArticles() ([]Article, error)
 	ListAuthors() ([]Author, error)
 	GetArticleById(id string) (Article, error)

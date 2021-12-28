@@ -27,8 +27,8 @@ func main() {
 	database := psqlConnect(host, port, user, password, dbname, schema)
 	defer database.Close()
 
-	handler := Handler{
-		Repository: &postgres.PSQLRepository{DB: database},
+	handler := BlogServer{
+		Service: &postgres.PSQLRepository{DB: database},
 	}
 
 	// define the associations between endpoints and handlers

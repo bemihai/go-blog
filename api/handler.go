@@ -11,15 +11,15 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Handler is responsible to answer to http request.
-type Handler struct {
-	Repository repo.Repository
+// BlogServer is responsible to answer to http request.
+type BlogServer struct {
+	Service repo.BlogService
 }
 
-func (h *Handler) ListArticles(w http.ResponseWriter, r *http.Request) {
+func (h *BlogServer) ListArticles(w http.ResponseWriter, r *http.Request) {
 
 	// get articles
-	articles, err := h.Repository.ListArticles()
+	articles, err := h.Service.ListArticles()
 	if err != nil {
 		http.Error(w, "Service unavailable.", http.StatusServiceUnavailable)
 		return
@@ -32,7 +32,7 @@ func (h *Handler) ListArticles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get authors by ids
-	authors, err := h.Repository.GetAuthorsByIds(ids)
+	authors, err := h.Service.GetAuthorsByIds(ids)
 	if err != nil {
 		http.Error(w, "Service unavailable.", http.StatusServiceUnavailable)
 		return
@@ -55,6 +55,7 @@ func (h *Handler) ListArticles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	if err != nil {
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
@@ -62,7 +63,7 @@ func (h *Handler) ListArticles(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) GetArticleById(w http.ResponseWriter, r *http.Request) {
+func (h *BlogServer) GetArticleById(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	id, err := uuid.Parse(vars["id"])
@@ -71,7 +72,7 @@ func (h *Handler) GetArticleById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	article, err := h.Repository.GetArticleById(id.String())
+	article, err := h.Service.GetArticleById(id.String())
 	if err != nil {
 		if errors.Is(err, db.ErrArticleNotFound) {
 			http.Error(w, "Article not found.", http.StatusNotFound)
@@ -82,7 +83,7 @@ func (h *Handler) GetArticleById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get article's author
-	article.Author, err = h.Repository.GetAuthorById(article.Author.Id)
+	article.Author, err = h.Service.GetAuthorById(article.Author.Id)
 	if err != nil {
 		http.Error(w, "Service unavailable.", http.StatusServiceUnavailable)
 		return
@@ -94,15 +95,15 @@ func (h *Handler) GetArticleById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	if err != nil {
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
 		return
 	}
-
 }
 
-func (h *Handler) AddArticle(w http.ResponseWriter, r *http.Request) {
+func (h *BlogServer) AddArticle(w http.ResponseWriter, r *http.Request) {
 
 	var article repo.Article
 
@@ -114,10 +115,10 @@ func (h *Handler) AddArticle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// add Author field in blog.authors table if not already exists
-	author, err := h.Repository.GetAuthorByNameAndEmail(article.Author.Name, article.Author.Email)
+	author, err := h.Service.GetAuthorByNameAndEmail(article.Author.Name, article.Author.Email)
 	if err != nil {
 		if errors.Is(err, db.ErrAuthorNotFound) {
-			article.Author.Id, err = h.Repository.AddAuthor(article.Author)
+			article.Author.Id, err = h.Service.AddAuthor(article.Author)
 			if err != nil {
 				http.Error(w, "Service unavailable.", http.StatusServiceUnavailable)
 				return
@@ -130,7 +131,7 @@ func (h *Handler) AddArticle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// add Article in blog.articles table
-	a, err := h.Repository.AddArticle(article)
+	a, err := h.Service.AddArticle(article)
 	if err != nil {
 		http.Error(w, "Service unavailable.", http.StatusServiceUnavailable)
 		return
@@ -141,6 +142,8 @@ func (h *Handler) AddArticle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	if err != nil {
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
@@ -148,7 +151,7 @@ func (h *Handler) AddArticle(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) DeleteArticleById(w http.ResponseWriter, r *http.Request) {
+func (h *BlogServer) DeleteArticleById(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	id, err := uuid.Parse(vars["id"])
@@ -157,7 +160,7 @@ func (h *Handler) DeleteArticleById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.Repository.DeleteArticleById(id.String())
+	err = h.Service.DeleteArticleById(id.String())
 	if err != nil {
 		if errors.Is(err, db.ErrArticleNotFound) {
 			http.Error(w, "Article not found.", http.StatusNotFound)
@@ -168,12 +171,12 @@ func (h *Handler) DeleteArticleById(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) DeleteAuthorByNameAndEmail(w http.ResponseWriter, r *http.Request) {
+func (h *BlogServer) DeleteAuthorByNameAndEmail(w http.ResponseWriter, r *http.Request) {
 
 	name := r.FormValue("name")
 	email := r.FormValue("email")
 
-	err := h.Repository.DeleteAuthorByNameAndEmail(name, email)
+	err := h.Service.DeleteAuthorByNameAndEmail(name, email)
 	if err != nil {
 		if errors.Is(err, db.ErrAuthorNotFound) {
 			http.Error(w, "Author not found.", http.StatusNotFound)
@@ -184,7 +187,7 @@ func (h *Handler) DeleteAuthorByNameAndEmail(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-// Handles not allowed requests on existing endpoints.
+// MethodNotAllowed handles not allowed requests on existing endpoints.
 func MethodNotAllowed(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusMethodNotAllowed)
 	_, err := w.Write([]byte("Method not allowed."))
