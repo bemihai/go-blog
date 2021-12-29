@@ -72,13 +72,14 @@ func (h *BlogServer) GetArticleById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	article, err := h.Service.GetArticleById(id.String())
+	q := id.String()
+	article, err := h.Service.GetArticleById(q)
 	if err != nil {
 		if errors.Is(err, db.ErrArticleNotFound) {
 			http.Error(w, "Article not found.", http.StatusNotFound)
 			return
 		}
-		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		http.Error(w, "Service unavailable.", http.StatusServiceUnavailable)
 		return
 	}
 
@@ -166,7 +167,7 @@ func (h *BlogServer) DeleteArticleById(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Article not found.", http.StatusNotFound)
 			return
 		}
-		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		http.Error(w, "Service unavailable.", http.StatusServiceUnavailable)
 		return
 	}
 }
@@ -182,7 +183,7 @@ func (h *BlogServer) DeleteAuthorByNameAndEmail(w http.ResponseWriter, r *http.R
 			http.Error(w, "Author not found.", http.StatusNotFound)
 			return
 		}
-		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		http.Error(w, "Service unavailable.", http.StatusServiceUnavailable)
 		return
 	}
 }
