@@ -53,7 +53,7 @@ func TestListArticles(t *testing.T) {
 		h.ListArticles(res, req)
 
 		var a []repo.Article
-		json.Unmarshal(res.Body.Bytes(), &a)
+		json.Unmarshal(res.Body.Bytes(), &a) // nolint: errcheck
 
 		require.Equal(t, res.Code, http.StatusOK)
 		require.Len(t, a, 1)
@@ -116,7 +116,7 @@ func TestGetArticleById(t *testing.T) {
 
 		h.GetArticleById(res, req)
 		var a repo.Article
-		json.Unmarshal(res.Body.Bytes(), &a)
+		json.Unmarshal(res.Body.Bytes(), &a) // nolint: errcheck
 
 		require.Equal(t, res.Code, http.StatusOK)
 		require.Equal(t, a.Title, article.Title)
@@ -213,7 +213,8 @@ func TestAddArticle(t *testing.T) {
 
 		h.AddArticle(res, req)
 		var id string
-		json.Unmarshal(res.Body.Bytes(), &id)
+		json.Unmarshal(res.Body.Bytes(), &id) // nolint: errcheck
+
 		require.Equal(t, res.Code, http.StatusOK)
 		require.Equal(t, id, expectedArticleId)
 		require.Len(t, r.Articles, 1)
