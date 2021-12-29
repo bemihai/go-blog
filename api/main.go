@@ -13,10 +13,10 @@ import (
 )
 
 const (
-	host     = "localhost"
+	host     = "34.72.188.178"
 	port     = 5432
-	user     = "postgres"
-	password = "postgres"
+	user     = "bemihai"
+	password = "bemihai"
 	dbname   = "blog"
 	schema   = "blog"
 )
