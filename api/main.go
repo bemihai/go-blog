@@ -12,19 +12,30 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// const (
+// 	host     = "/cloudsql/lunar-outlet-334614:us-central1:blog"
+// 	port     = 5432
+// 	user     = "bemihai"
+// 	password = "bemihai"
+// 	dbname   = "blog"
+// 	schema   = "blog"
+// )
+
 const (
-	host     = "/cloudsql/lunar-outlet-334614:us-central1:blog"
-	port     = 5432
-	user     = "bemihai"
-	password = "bemihai"
-	dbname   = "blog"
-	schema   = "blog"
+	DBDriver = "postgres"
+	DBSource = "postgresql://postgres:postgres@localhost:5432/blog?sslmode=disable"
 )
 
 func main() {
 
+	// get config
+	// config, err := util.LoadConfig(".")
+	// if err != nil {
+	// 	log.Fatal("cannot load config:", err)
+	// }
+
 	// define handler for http requests with postgres repository
-	database := psqlConnect(host, port, user, password, dbname, schema)
+	database := dbConnect(DBDriver, DBSource)
 	defer database.Close()
 
 	handler := BlogServer{
@@ -73,13 +84,10 @@ func main() {
 
 }
 
-// Connects to a postgres database.
-func psqlConnect(host string, port int, user string, password string, dbname string, schema string) *sql.DB {
+// dbConnect creates a connection to a database.
+func dbConnect(dbDriver string, dbSource string) *sql.DB {
 
-	psqlConString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable search_path=%s",
-		host, port, user, password, dbname, schema)
-
-	db, err := sql.Open("postgres", psqlConString)
+	db, err := sql.Open(dbDriver, dbSource)
 	if err != nil {
 		panic(err)
 	}
@@ -89,6 +97,6 @@ func psqlConnect(host string, port int, user string, password string, dbname str
 		panic(err)
 	}
 
-	log.Println("Successfully connected to postgres!")
+	log.Println("Successfully connected to db!")
 	return db
 }

@@ -1,5 +1,8 @@
+server:
+	go run api/main.go api/handler.go
+
 postgres:
-	docker run --name postgres12 -p 5432:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -d postgres:12-alpine
+	docker run --name postgres12 --network blog-network -p 5432:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -d postgres:12-alpine
 
 createdb:
 	docker exec -it postgres12 createdb --username=postgres --owner=postgres blog
@@ -19,4 +22,4 @@ sqlc:
 test:
 	go test -v -cover ./...
 
-.PHONY: postgres createdb migrateup migratedown dropdb test
+.PHONY: server postgres createdb migrateup migratedown dropdb sqlc test
