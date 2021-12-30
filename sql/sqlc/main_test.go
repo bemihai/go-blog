@@ -1,6 +1,7 @@
 package sqlc_db
 
 import (
+	"blog/util"
 	"database/sql"
 	"log"
 	"os"
@@ -11,14 +12,15 @@ import (
 
 var testQueries *Queries
 
-const (
-	dbDriver = "postgres"
-	dbSource = "postgresql://postgres:postgres@localhost:5432/blog?sslmode=disable"
-)
-
 // entry point of all tests in the package
 func TestMain(m *testing.M) {
-	conn, err := sql.Open(dbDriver, dbSource)
+
+	config, err := util.LoadConfig(".")
+	if err != nil {
+		log.Fatal("cannot load config:", err)
+	}
+
+	conn, err := sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatal("cannot connect to db:", err)
 	}
