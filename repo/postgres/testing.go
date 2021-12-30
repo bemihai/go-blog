@@ -3,7 +3,6 @@ package postgres
 import (
 	repo "blog/repo"
 	"blog/util/utildb"
-	"blog/util/utiltesting"
 	"database/sql"
 	"testing"
 	"time"
@@ -52,8 +51,8 @@ func createTestDB(tb testing.TB, connection string) (*sql.DB, string) {
 		db.Close()                    // nolint: errcheck
 	})
 
-	err = utildb.ExecFile(db, utiltesting.AbsolutePath("/blog/sql/test.sql"))
-	require.NoError(tb, err, "Could not create tables")
+	// err = utildb.ExecFile(db, utiltesting.AbsolutePath("/blog/sql/test.sql"))
+	// require.NoError(tb, err, "Could not create tables")
 
 	return db, schema
 }
