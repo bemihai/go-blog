@@ -59,7 +59,7 @@ func createTestDB(tb testing.TB, connection string) (*sql.DB, string) {
 
 // truncateTables truncates tables in the given db.
 func truncateTables(t *testing.T, db *sql.DB) {
-	_, err := db.Exec("DELETE FROM authors; DELETE FROM articles;")
+	_, err := db.Exec("DELETE FROM articles; DELETE FROM authors;")
 	require.NoError(t, err, "Could not truncate tables")
 }
 

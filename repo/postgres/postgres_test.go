@@ -23,6 +23,7 @@ func TestListArticles(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
+	truncateTables(t, db)
 
 	t.Run("table containing 2 entries", func(t *testing.T) {
 		dumpTestData(t, db)
@@ -51,6 +52,7 @@ func TestListAuthors(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
+	truncateTables(t, db)
 
 	t.Run("table containing 2 entries", func(t *testing.T) {
 		dumpTestData(t, db)
@@ -80,6 +82,7 @@ func TestGetArticleById(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
+	truncateTables(t, db)
 	dumpTestData(t, db)
 
 	t.Run("existing article", func(t *testing.T) {
@@ -104,6 +107,7 @@ func TestGetAuthorById(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
+	truncateTables(t, db)
 	dumpTestData(t, db)
 
 	t.Run("existing author", func(t *testing.T) {
@@ -128,6 +132,7 @@ func TestGetAuthorsByIds(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
+	truncateTables(t, db)
 	dumpTestData(t, db)
 
 	t.Run("existing authors", func(t *testing.T) {
@@ -150,6 +155,7 @@ func TestGetAuthorByNameAndEmail(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
+	truncateTables(t, db)
 	dumpTestData(t, db)
 
 	t.Run("existing author", func(t *testing.T) {
@@ -169,6 +175,7 @@ func TestAddAuthor(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
+	truncateTables(t, db)
 
 	t.Run("valid author", func(t *testing.T) {
 		id, err := r.AddAuthor(repo.Author{Name: "John Doe", Email: "john.doe@mail.com"})
@@ -184,6 +191,7 @@ func TestAddArticle(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
+	truncateTables(t, db)
 	dumpTestData(t, db)
 
 	t.Run("author id already in the table", func(t *testing.T) {
@@ -205,6 +213,7 @@ func TestDeleteArticleById(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
+	truncateTables(t, db)
 	dumpTestData(t, db)
 
 	t.Run("existing article", func(t *testing.T) {
@@ -228,6 +237,7 @@ func TestDeleteAuthorById(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
+	truncateTables(t, db)
 	dumpTestData(t, db)
 
 	t.Run("existing author", func(t *testing.T) {
@@ -251,6 +261,7 @@ func TestDeleteAuthorByNameAndEmail(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
+	truncateTables(t, db)
 	dumpTestData(t, db)
 
 	t.Run("existing article", func(t *testing.T) {
