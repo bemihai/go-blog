@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
+	"os"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 )
 
 const (
-	host     = "34.72.188.178"
+	host     = "/cloudsql/lunar-outlet-334614:us-central1:blog"
 	port     = 5432
 	user     = "bemihai"
 	password = "bemihai"
@@ -32,45 +32,45 @@ func main() {
 	}
 
 	// define the associations between endpoints and handlers
-	router := mux.NewRouter()
+	r := mux.NewRouter()
+
+	// define handler for GET on "/"
+	r.HandleFunc("/", CheckHealth)
 
 	// define handler for GET on "/articles" endpoint
-	router.Handle("/articles", http.HandlerFunc(handler.ListArticles)).Methods(http.MethodGet)
+	r.Handle("/articles", http.HandlerFunc(handler.ListArticles)).Methods(http.MethodGet)
 
 	// define handler for GET on "/articles/id" endpoint
-	router.Handle("/articles/{id}", http.HandlerFunc(handler.GetArticleById)).Methods(http.MethodGet)
+	r.Handle("/articles/{id}", http.HandlerFunc(handler.GetArticleById)).Methods(http.MethodGet)
 
 	// define handler for POST on "/articles" endpoint
-	router.Handle("/articles", http.HandlerFunc(handler.AddArticle)).Methods(http.MethodPost)
+	r.Handle("/articles", http.HandlerFunc(handler.AddArticle)).Methods(http.MethodPost)
 
 	// define handler for DELETE on "/articles/id" endpoint
-	router.Handle("/articles/{id}", http.HandlerFunc(handler.DeleteArticleById)).Methods(http.MethodDelete)
+	r.Handle("/articles/{id}", http.HandlerFunc(handler.DeleteArticleById)).Methods(http.MethodDelete)
 
 	// define handler for DELETE on "/authors" endpoint
-	router.Handle("/authors", http.HandlerFunc(handler.DeleteAuthorByNameAndEmail)).Methods(http.MethodDelete)
+	r.Handle("/authors", http.HandlerFunc(handler.DeleteAuthorByNameAndEmail)).Methods(http.MethodDelete)
 
 	// define handler for not found endpoint
-	router.NotFoundHandler = http.NotFoundHandler()
+	r.NotFoundHandler = http.NotFoundHandler()
 
 	// defines handler for not allowed methods
-	router.MethodNotAllowedHandler = http.HandlerFunc(MethodNotAllowed)
+	r.MethodNotAllowedHandler = http.HandlerFunc(MethodNotAllowed)
 
-	// defines the server instance by specifing the endpoints handler and the address (host:port)
-	server := &http.Server{
-		Handler: router,
-		Addr:    "127.0.0.1:8000",
-		// Good practice: enforce timeouts for servers you create!
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+		log.Printf("Defaulting to port %s", port)
 	}
 
-	log.Println("Starting the server...listening on port 8000")
+	log.Printf("Listening on port: %s", port)
 
-	// start the server
-	err := server.ListenAndServe()
-	if err != nil {
-		log.Fatal(err)
+	//  Start HTTP
+	if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%s", port), r); err != nil {
+		log.Fatal("Failed starting http server: ", err)
 	}
+
 }
 
 // Connects to a postgres database.
@@ -89,6 +89,6 @@ func psqlConnect(host string, port int, user string, password string, dbname str
 		panic(err)
 	}
 
-	fmt.Println("Successfully connected to postgres!")
+	log.Println("Successfully connected to postgres!")
 	return db
 }

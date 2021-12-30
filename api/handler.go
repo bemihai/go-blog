@@ -197,3 +197,13 @@ func MethodNotAllowed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+// CheckHealth checks the health of the API.
+func CheckHealth(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	_, err := w.Write([]byte("Service healthy"))
+	if err != nil {
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
+}

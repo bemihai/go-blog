@@ -1,0 +1,3 @@
+runtime: go116
+env: standard
+main: ./api
