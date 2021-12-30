@@ -1,0 +1,4 @@
+
+# create init_schema and copy queries to files
+migrate create -ext sql -dir sql/migration -seq init_schema
+
