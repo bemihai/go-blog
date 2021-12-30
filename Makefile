@@ -11,7 +11,7 @@ migrateup:
 	migrate -path sql/migration -database "postgresql://postgres:postgres@localhost:5432/blog?sslmode=disable" -verbose up
 
 migratedown:
-	migrate -path sql/migration -database "postgresql://postgres:postgres@localhost:5431/blog?sslmode=disable" -verbose down
+	migrate -path sql/migration -database "postgresql://postgres:postgres@localhost:5432/blog?sslmode=disable" -verbose down
 
 sqlc:
 	sqlc generate
