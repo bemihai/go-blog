@@ -13,7 +13,7 @@ var testQueries *Queries
 
 const (
 	dbDriver = "postgres"
-	dbSource = "postgresql://postgres:postgres@localhost:5431/blog?sslmode=disable"
+	dbSource = "postgresql://postgres:postgres@localhost:5432/blog?sslmode=disable"
 )
 
 // entry point of all tests in the package
