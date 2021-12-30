@@ -10,12 +10,26 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:12
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: blog
+        options: >-
+          --health-cmd pg_isready
+          --health_interval 10s
+          --health_timeout 5s
+          --health_retries 5
+
     steps:
 
     - name: Check out the code 
       uses: actions/checkout@v2
 
-    - name: Set up Go 1.x
+    - name: Set up Go 1.17
       uses: actions/setup-go@v2
       with:
         go-version: 1.17
