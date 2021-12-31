@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"blog/repo/postgres"
@@ -12,34 +12,10 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// const (
-// 	host     = "/cloudsql/lunar-outlet-334614:us-central1:blog"
-// 	port     = 5432
-// 	user     = "bemihai"
-// 	password = "bemihai"
-// 	dbname   = "blog"
-// 	schema   = "blog"
-// )
-
-const (
-	DBDriver = "postgres"
-	DBSource = "postgresql://postgres:postgres@localhost:5432/blog?sslmode=disable"
-)
-
-func main() {
-
-	// get config
-	// config, err := util.LoadConfig(".")
-	// if err != nil {
-	// 	log.Fatal("cannot load config:", err)
-	// }
-
-	// define handler for http requests with postgres repository
-	database := dbConnect(DBDriver, DBSource)
-	defer database.Close()
+func StartNewServer(connection *sql.DB) {
 
 	handler := BlogServer{
-		Service: &postgres.PSQLRepository{DB: database},
+		Service: &postgres.PSQLRepository{DB: connection},
 	}
 
 	// define the associations between endpoints and handlers
@@ -74,29 +50,10 @@ func main() {
 		port = "8080"
 		log.Printf("Defaulting to port %s", port)
 	}
-
 	log.Printf("Listening on port: %s", port)
 
 	//  Start HTTP
 	if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%s", port), r); err != nil {
 		log.Fatal("Failed starting http server: ", err)
 	}
-
-}
-
-// dbConnect creates a connection to a database.
-func dbConnect(dbDriver string, dbSource string) *sql.DB {
-
-	db, err := sql.Open(dbDriver, dbSource)
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Ping()
-	if err != nil {
-		panic(err)
-	}
-
-	log.Println("Successfully connected to db!")
-	return db
 }

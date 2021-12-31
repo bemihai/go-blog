@@ -1,6 +1,9 @@
 package utildb
 
-import "database/sql"
+import (
+	"database/sql"
+	"log"
+)
 
 // Connect connects to a database and verifies the connection with a ping.
 func Connect(driverName, dataSourceName string) (*sql.DB, error) {
@@ -13,6 +16,7 @@ func Connect(driverName, dataSourceName string) (*sql.DB, error) {
 		db.Close() // nolint: errcheck
 		return nil, err
 	}
+	log.Println("Successfully connected to db")
 	return db, nil
 }
 

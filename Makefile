@@ -1,5 +1,5 @@
 server:
-	go run api/main.go api/handler.go
+	go run main.go 
 
 postgres:
 	docker run --name postgres12 --network blog-network -p 5432:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -d postgres:12-alpine
