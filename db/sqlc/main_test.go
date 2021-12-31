@@ -12,7 +12,7 @@ import (
 
 var testQueries *Queries
 
-// entry point of all tests in the package
+// TestMain is the entry point of all the tests in the package.
 func TestMain(m *testing.M) {
 
 	config, err := util.LoadConfig(".")
