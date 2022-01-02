@@ -10,12 +10,15 @@ import (
 func main() {
 
 	// get config
-	config := util.LoadConfig("")
+	config := util.LoadConfig("prod_config.json")
+	source := util.GetDBSource(config)
+
+	log.Println(source)
 
 	// open connection to db
-	db, err := utildb.Connect(config.DB_DRIVER, config.DB_SOURCE)
+	db, err := utildb.Connect(config.DB_DRIVER, source)
 	if err != nil {
-		log.Fatal("Failed to connect to the db: ", err)
+		log.Fatal("Start app: Failed to connect to the db: ", err)
 	}
 	defer db.Close()
 
