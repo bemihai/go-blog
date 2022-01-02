@@ -15,12 +15,9 @@ var testQueries *Queries
 // TestMain is the entry point of all the tests in the package.
 func TestMain(m *testing.M) {
 
-	config, err := util.LoadConfig(".")
-	if err != nil {
-		log.Fatal("cannot load config:", err)
-	}
+	config := util.LoadConfig("../../dev_config.json")
 
-	conn, err := sql.Open(config.DBDriver, config.DBSource)
+	conn, err := sql.Open(config.DB_DRIVER, config.DB_SOURCE)
 	if err != nil {
 		log.Fatal("cannot connect to db:", err)
 	}

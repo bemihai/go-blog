@@ -1,0 +1,5 @@
+{
+    "DB_DRIVER": "postgres",
+    "DB_SOURCE": "postgresql+pg8000://bemihai:bemihai@/blog?unix_sock=/cloudsql/lunar-outlet-334614:us-central1:blog"
+}
+
