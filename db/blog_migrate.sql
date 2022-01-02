@@ -1,4 +1,4 @@
--- CREATE EXTENSION pgcrypto;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE authors (
 	id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
