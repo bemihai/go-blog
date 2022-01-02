@@ -2,6 +2,8 @@ package sqlc_db
 
 import (
 	"blog/util"
+	"blog/util/utildb"
+	"blog/util/utiltesting"
 	"database/sql"
 	"log"
 	"os"
@@ -20,6 +22,11 @@ func TestMain(m *testing.M) {
 	conn, err := sql.Open(config.DB_DRIVER, config.DB_SOURCE)
 	if err != nil {
 		log.Fatal("cannot connect to db:", err)
+	}
+
+	err = utildb.ExecFile(conn, utiltesting.AbsolutePath("/blog/db/blog_migrate.sql"))
+	if err != nil {
+		log.Fatal("could not create tables:", err)
 	}
 
 	testQueries = New(conn)
