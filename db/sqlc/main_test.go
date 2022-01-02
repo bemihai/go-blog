@@ -23,7 +23,7 @@ func TestMain(m *testing.M) {
 		log.Fatal("cannot connect to db:", err)
 	}
 
-	err = utildb.ExecFile(conn, "./db/blog_migrate.sql")
+	err = utildb.ExecFile(conn, "../../db/blog_migrate.sql")
 	if err != nil {
 		log.Fatal("could not create tables:", err)
 	}
