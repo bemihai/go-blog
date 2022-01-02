@@ -47,8 +47,8 @@ func createTestDB(tb testing.TB, connection string) (*sql.DB, string) {
 	require.NoError(tb, err, "Could not create blog schema")
 	require.NotEmpty(tb, schema, "Empty schema")
 
-	// err = utildb.ExecFile(db, utiltesting.AbsolutePath("/blog/db/blog_migrate.sql"))
-	// require.NoError(tb, err, "Could not create tables")
+	err = utildb.ExecFile(db, "./db/blog_migrate.sql")
+	require.NoError(tb, err, "Could not create tables")
 
 	err = dumpTestData(db)
 	if err != nil {
