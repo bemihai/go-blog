@@ -1,8 +1,6 @@
-package postgres
+package repo
 
 import (
-	repo "blog/repo"
-
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,7 +13,7 @@ const (
 func TestListArticles(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
-	r := PSQLRepository{DB: db}
+	r := BlogRepo{DB: db}
 
 	t.Run("table containing 2 entries", func(t *testing.T) {
 		articles, err := r.ListArticles()
@@ -36,7 +34,7 @@ func TestListArticles(t *testing.T) {
 func TestListAuthors(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
-	r := PSQLRepository{DB: db}
+	r := BlogRepo{DB: db}
 
 	t.Run("table containing 2 entries", func(t *testing.T) {
 		authors, err := r.ListAuthors()
@@ -57,7 +55,7 @@ func TestListAuthors(t *testing.T) {
 func TestGetArticleById(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
-	r := PSQLRepository{DB: db}
+	r := BlogRepo{DB: db}
 
 	t.Run("existing article", func(t *testing.T) {
 		a, err := r.GetArticleById("b4a4de9e-2f52-4cf1-8907-3d828d403126")
@@ -80,7 +78,7 @@ func TestGetArticleById(t *testing.T) {
 func TestGetAuthorById(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
-	r := PSQLRepository{DB: db}
+	r := BlogRepo{DB: db}
 
 	t.Run("existing author", func(t *testing.T) {
 		a, err := r.GetAuthorById("b4a4de9e-2f52-4cf1-8907-3d828d403124")
@@ -103,7 +101,7 @@ func TestGetAuthorById(t *testing.T) {
 func TestGetAuthorsByIds(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
-	r := PSQLRepository{DB: db}
+	r := BlogRepo{DB: db}
 
 	t.Run("existing authors", func(t *testing.T) {
 		ids := []string{"b4a4de9e-2f52-4cf1-8907-3d828d403124", "b4a4de9e-2f52-4cf1-8907-3d828d403125"}
@@ -124,7 +122,7 @@ func TestGetAuthorsByIds(t *testing.T) {
 func TestGetAuthorByNameAndEmail(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
-	r := PSQLRepository{DB: db}
+	r := BlogRepo{DB: db}
 
 	t.Run("existing author", func(t *testing.T) {
 		a, err := r.GetAuthorByNameAndEmail("Test Author1", "test.author1@email.com")
@@ -142,10 +140,10 @@ func TestGetAuthorByNameAndEmail(t *testing.T) {
 func TestAddAuthor(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
-	r := PSQLRepository{DB: db}
+	r := BlogRepo{DB: db}
 
 	t.Run("valid author", func(t *testing.T) {
-		id, err := r.AddAuthor(repo.Author{Name: "John Doe", Email: "john.doe@mail.com"})
+		id, err := r.AddAuthor(Author{Name: "John Doe", Email: "john.doe@mail.com"})
 		require.NoError(t, err)
 		require.Len(t, id, 36)
 		a, err := r.ListAuthors()
@@ -157,10 +155,10 @@ func TestAddAuthor(t *testing.T) {
 func TestAddArticle(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
-	r := PSQLRepository{DB: db}
+	r := BlogRepo{DB: db}
 
 	t.Run("author id already in the table", func(t *testing.T) {
-		id, err := r.AddArticle(repo.Article{Title: "test", Body: "test", Author: repo.Author{Id: "b4a4de9e-2f52-4cf1-8907-3d828d403124"}})
+		id, err := r.AddArticle(Article{Title: "test", Body: "test", Author: Author{Id: "b4a4de9e-2f52-4cf1-8907-3d828d403124"}})
 		require.NoError(t, err)
 		require.Len(t, id, 36)
 		a, err := r.ListArticles()
@@ -169,7 +167,7 @@ func TestAddArticle(t *testing.T) {
 	})
 
 	t.Run("author id not in the table", func(t *testing.T) {
-		_, err := r.AddArticle(repo.Article{Title: "test", Body: "test", Author: repo.Author{Id: "b4a4de9e-2f52-4cf1-8907-3d828d403128"}})
+		_, err := r.AddArticle(Article{Title: "test", Body: "test", Author: Author{Id: "b4a4de9e-2f52-4cf1-8907-3d828d403128"}})
 		require.Error(t, err)
 	})
 }
@@ -177,7 +175,7 @@ func TestAddArticle(t *testing.T) {
 func TestDeleteArticleById(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
-	r := PSQLRepository{DB: db}
+	r := BlogRepo{DB: db}
 
 	t.Run("existing article", func(t *testing.T) {
 		err := r.DeleteArticleById("b4a4de9e-2f52-4cf1-8907-3d828d403126")
@@ -193,7 +191,7 @@ func TestDeleteArticleById(t *testing.T) {
 func TestDeleteAuthorById(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
-	r := PSQLRepository{DB: db}
+	r := BlogRepo{DB: db}
 
 	t.Run("existing author", func(t *testing.T) {
 		err := r.DeleteAuthorById("b4a4de9e-2f52-4cf1-8907-3d828d403124")
@@ -209,7 +207,7 @@ func TestDeleteAuthorById(t *testing.T) {
 func TestDeleteAuthorByNameAndEmail(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
-	r := PSQLRepository{DB: db}
+	r := BlogRepo{DB: db}
 
 	t.Run("existing article", func(t *testing.T) {
 		err := r.DeleteAuthorByNameAndEmail("Test Author1", "test.author1@email.com")

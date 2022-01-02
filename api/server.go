@@ -1,7 +1,7 @@
 package api
 
 import (
-	"blog/repo/postgres"
+	repo "blog/repo"
 	"database/sql"
 	"fmt"
 	"log"
@@ -15,7 +15,7 @@ import (
 func StartNewServer(connection *sql.DB) {
 
 	handler := BlogServer{
-		Service: &postgres.PSQLRepository{DB: connection},
+		Service: &repo.BlogRepo{DB: connection},
 	}
 
 	// define the associations between endpoints and handlers

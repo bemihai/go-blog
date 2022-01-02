@@ -1,4 +1,4 @@
-package utiltesting
+package util
 
 import (
 	"os"

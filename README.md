@@ -1,3 +1,3 @@
 # go-blog
 
-A simple blog-like REST API implemented in Go. 
+A simple REST API implemented in Go. 

@@ -2,7 +2,6 @@ package api
 
 import (
 	repo "blog/repo"
-	db "blog/repo/postgres"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -139,7 +138,7 @@ func TestGetArticleById(t *testing.T) {
 		r := &MockService{
 			GetArticleByIdFunc: func(id string) (repo.Article, error) {
 				require.Equal(t, id, expectedArticleId)
-				return repo.Article{}, db.ErrArticleNotFound
+				return repo.Article{}, repo.ErrArticleNotFound
 			},
 		}
 
@@ -276,7 +275,7 @@ func TestAddArticle(t *testing.T) {
 				return "", errors.New("couldn't add new author")
 			},
 			GetAuthorByNameAndEmailFunc: func(name, email string) (repo.Author, error) {
-				return repo.Author{}, db.ErrAuthorNotFound
+				return repo.Author{}, repo.ErrAuthorNotFound
 			},
 		}
 
@@ -324,7 +323,7 @@ func TestDeleteArticleById(t *testing.T) {
 		r := &MockService{
 			DeleteArticleByIdFunc: func(id string) error {
 				require.Equal(t, id, expectedArticleId)
-				return db.ErrArticleNotFound
+				return repo.ErrArticleNotFound
 			},
 		}
 
@@ -379,7 +378,7 @@ func TestDeleteAuthorByNameAndEmail(t *testing.T) {
 			DeleteAuthorByNameAndEmailFunc: func(name string, email string) error {
 				require.Equal(t, name, author.Name)
 				require.Equal(t, email, author.Email)
-				return db.ErrAuthorNotFound
+				return repo.ErrAuthorNotFound
 			},
 		}
 

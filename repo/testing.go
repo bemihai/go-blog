@@ -1,7 +1,6 @@
-package postgres
+package repo
 
 import (
-	repo "blog/repo"
 	"blog/util/utildb"
 	"database/sql"
 	"fmt"
@@ -12,13 +11,13 @@ import (
 )
 
 // test data
-var articles = []repo.Article{
+var articles = []Article{
 	{
 		Id:       "b4a4de9e-2f52-4cf1-8907-3d828d403126",
 		Title:    "Test title 1",
 		Body:     "Test body 1",
 		PostedAt: time.Now(),
-		Author: repo.Author{
+		Author: Author{
 			Id:    "b4a4de9e-2f52-4cf1-8907-3d828d403124",
 			Name:  "Test Author1",
 			Email: "test.author1@email.com",
@@ -29,7 +28,7 @@ var articles = []repo.Article{
 		Title:    "Test title 2",
 		Body:     "Test body 2",
 		PostedAt: time.Now(),
-		Author: repo.Author{
+		Author: Author{
 			Id:    "b4a4de9e-2f52-4cf1-8907-3d828d403125",
 			Name:  "Test Author2",
 			Email: "test.author2@email.com",

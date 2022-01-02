@@ -1,6 +1,0 @@
-
-# create init_schema and copy queries to files
-migrate create -ext sql -dir sql/migration -seq init_schema
-
-docker run --name blog --network blog-network -e DB_SOURCE="postgresql://postgres:postgres@postgres12:5432/blog?sslmode=disable" -p 8080:8080 blog:latest
-

@@ -10,16 +10,16 @@ createdb:
 dropdb:
 	docker exec -it postgres12 dropdb blog
 
+migrateinit:
+	migrate create -ext sql -dir db/migration -seq init_schema
+
 migrateup:
 	migrate -path db/migration -database "postgresql://postgres:postgres@localhost:5432/blog?sslmode=disable" -verbose up
 
 migratedown:
 	migrate -path db/migration -database "postgresql://postgres:postgres@localhost:5432/blog?sslmode=disable" -verbose down
 
-sqlc:
-	sqlc generate
-
 test:
 	go test -v -cover ./...
 
-.PHONY: server postgres createdb migrateup migratedown dropdb sqlc test
+.PHONY: server postgres createdb migrateinit migrateup migratedown dropdb test

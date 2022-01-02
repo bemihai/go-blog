@@ -1,7 +1,6 @@
-package postgres
+package repo
 
 import (
-	repo "blog/repo"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -9,28 +8,43 @@ import (
 	"github.com/lib/pq"
 )
 
-type PSQLRepository struct {
+// BlogService represents the blog repository.
+type BlogService interface {
+	ListArticles() ([]Article, error)
+	ListAuthors() ([]Author, error)
+	GetArticleById(id string) (Article, error)
+	GetAuthorById(id string) (Author, error)
+	GetAuthorsByIds(ids []string) ([]Author, error)
+	GetAuthorByNameAndEmail(name string, email string) (Author, error)
+	AddArticle(a Article) (string, error)
+	AddAuthor(a Author) (string, error)
+	DeleteArticleById(id string) error
+	DeleteAuthorById(id string) error
+	DeleteAuthorByNameAndEmail(name string, email string) error
+}
+
+type BlogRepo struct {
 	DB *sql.DB
 }
 
 // Get all articles.
-func (r *PSQLRepository) ListArticles() ([]repo.Article, error) {
+func (r *BlogRepo) ListArticles() ([]Article, error) {
 
-	articles := make([]repo.Article, 0)
+	articles := make([]Article, 0)
 	query := `SELECT a.id, a.title, a.body, a.posted_at, a.author_id FROM articles a;`
 
 	rows, err := r.DB.Query(query)
 	if err != nil {
-		return []repo.Article{}, fmt.Errorf("cannot execute query: %w", err)
+		return []Article{}, fmt.Errorf("cannot execute query: %w", err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var art repo.Article
-		var auth repo.Author
+		var art Article
+		var auth Author
 		err := rows.Scan(&art.Id, &art.Title, &art.Body, &art.PostedAt, &auth.Id)
 		if err != nil {
-			return []repo.Article{}, fmt.Errorf("cannot scan article: %w", err)
+			return []Article{}, fmt.Errorf("cannot scan article: %w", err)
 		}
 		art.Author = auth
 		articles = append(articles, art)
@@ -39,22 +53,22 @@ func (r *PSQLRepository) ListArticles() ([]repo.Article, error) {
 }
 
 // Get all authors.
-func (r *PSQLRepository) ListAuthors() ([]repo.Author, error) {
+func (r *BlogRepo) ListAuthors() ([]Author, error) {
 
-	authors := make([]repo.Author, 0)
+	authors := make([]Author, 0)
 	query := `SELECT a.id, a.name, a.email FROM authors a;`
 
 	rows, err := r.DB.Query(query)
 	if err != nil {
-		return []repo.Author{}, fmt.Errorf("cannot execute query: %w", err)
+		return []Author{}, fmt.Errorf("cannot execute query: %w", err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var a repo.Author
+		var a Author
 		err := rows.Scan(&a.Id, &a.Name, &a.Email)
 		if err != nil {
-			return []repo.Author{}, fmt.Errorf("cannot scan author: %w", err)
+			return []Author{}, fmt.Errorf("cannot scan author: %w", err)
 		}
 		authors = append(authors, a)
 	}
@@ -64,62 +78,62 @@ func (r *PSQLRepository) ListAuthors() ([]repo.Author, error) {
 var ErrArticleNotFound = errors.New("article not found")
 
 // Get article by id.
-func (r *PSQLRepository) GetArticleById(id string) (repo.Article, error) {
+func (r *BlogRepo) GetArticleById(id string) (Article, error) {
 
-	var art repo.Article
-	var auth repo.Author
+	var art Article
+	var auth Author
 
 	query := `SELECT a.id, a.title, a.body, a.posted_at, a.author_id FROM articles a WHERE a.id = $1;`
 	row := r.DB.QueryRow(query, id)
 
 	switch err := row.Scan(&art.Id, &art.Title, &art.Body, &art.PostedAt, &auth.Id); err {
 	case sql.ErrNoRows:
-		return repo.Article{}, ErrArticleNotFound
+		return Article{}, ErrArticleNotFound
 	case nil:
 		art.Author = auth
 		return art, nil
 	default:
-		return repo.Article{}, fmt.Errorf("cannot scan article: %w", err)
+		return Article{}, fmt.Errorf("cannot scan article: %w", err)
 	}
 }
 
 var ErrAuthorNotFound = errors.New("author not found")
 
 // Get author by id.
-func (r *PSQLRepository) GetAuthorById(id string) (repo.Author, error) {
+func (r *BlogRepo) GetAuthorById(id string) (Author, error) {
 
-	var a repo.Author
+	var a Author
 
 	query := `SELECT a.id, a.name, a.email FROM authors a WHERE a.id = $1;`
 	row := r.DB.QueryRow(query, id)
 
 	switch err := row.Scan(&a.Id, &a.Name, &a.Email); err {
 	case sql.ErrNoRows:
-		return repo.Author{}, ErrAuthorNotFound
+		return Author{}, ErrAuthorNotFound
 	case nil:
 		return a, nil
 	default:
-		return repo.Author{}, fmt.Errorf("cannot scan author: %w", err)
+		return Author{}, fmt.Errorf("cannot scan author: %w", err)
 	}
 }
 
 // Get authors by ids.
-func (r *PSQLRepository) GetAuthorsByIds(ids []string) ([]repo.Author, error) {
+func (r *BlogRepo) GetAuthorsByIds(ids []string) ([]Author, error) {
 
-	authors := make([]repo.Author, 0)
+	authors := make([]Author, 0)
 
 	query := `SELECT a.id, a.name, a.email FROM authors a WHERE a.id = any($1);`
 	rows, err := r.DB.Query(query, pq.Array(ids))
 	if err != nil {
-		return []repo.Author{}, fmt.Errorf("cannot execute query: %w", err)
+		return []Author{}, fmt.Errorf("cannot execute query: %w", err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var a repo.Author
+		var a Author
 		err := rows.Scan(&a.Id, &a.Name, &a.Email)
 		if err != nil {
-			return []repo.Author{}, fmt.Errorf("cannot scan author: %w", err)
+			return []Author{}, fmt.Errorf("cannot scan author: %w", err)
 		}
 		authors = append(authors, a)
 	}
@@ -128,25 +142,25 @@ func (r *PSQLRepository) GetAuthorsByIds(ids []string) ([]repo.Author, error) {
 }
 
 // Get author by name and email.
-func (r *PSQLRepository) GetAuthorByNameAndEmail(name string, email string) (repo.Author, error) {
+func (r *BlogRepo) GetAuthorByNameAndEmail(name string, email string) (Author, error) {
 
-	var a repo.Author
+	var a Author
 
 	query := `SELECT a.id, a.name, a.email FROM authors a WHERE a.name = $1 AND a.email = $2;`
 	row := r.DB.QueryRow(query, name, email)
 
 	switch err := row.Scan(&a.Id, &a.Name, &a.Email); err {
 	case sql.ErrNoRows:
-		return repo.Author{}, ErrAuthorNotFound
+		return Author{}, ErrAuthorNotFound
 	case nil:
 		return a, nil
 	default:
-		return repo.Author{}, fmt.Errorf("cannot scan author: %w", err)
+		return Author{}, fmt.Errorf("cannot scan author: %w", err)
 	}
 }
 
 // Add new author and return its id.
-func (r *PSQLRepository) AddAuthor(a repo.Author) (string, error) {
+func (r *BlogRepo) AddAuthor(a Author) (string, error) {
 
 	var id string
 
@@ -161,7 +175,7 @@ func (r *PSQLRepository) AddAuthor(a repo.Author) (string, error) {
 }
 
 // Add new article and return its id.
-func (r *PSQLRepository) AddArticle(a repo.Article) (string, error) {
+func (r *BlogRepo) AddArticle(a Article) (string, error) {
 
 	var id string
 
@@ -176,7 +190,7 @@ func (r *PSQLRepository) AddArticle(a repo.Article) (string, error) {
 }
 
 // Delete article by id.
-func (r *PSQLRepository) DeleteArticleById(id string) error {
+func (r *BlogRepo) DeleteArticleById(id string) error {
 
 	query := `DELETE FROM articles WHERE id = $1;`
 	res, err := r.DB.Exec(query, id)
@@ -196,7 +210,7 @@ func (r *PSQLRepository) DeleteArticleById(id string) error {
 }
 
 // Delete author by id.
-func (r *PSQLRepository) DeleteAuthorById(id string) error {
+func (r *BlogRepo) DeleteAuthorById(id string) error {
 
 	query := `DELETE FROM authors WHERE id = $1;`
 	res, err := r.DB.Exec(query, id)
@@ -216,7 +230,7 @@ func (r *PSQLRepository) DeleteAuthorById(id string) error {
 }
 
 // Delete author by name and email (and all its articles).
-func (r *PSQLRepository) DeleteAuthorByNameAndEmail(name string, email string) error {
+func (r *BlogRepo) DeleteAuthorByNameAndEmail(name string, email string) error {
 
 	query := `DELETE FROM authors WHERE name = $1 AND email = $2;`
 	res, err := r.DB.Exec(query, name, email)

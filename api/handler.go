@@ -2,7 +2,6 @@ package api
 
 import (
 	repo "blog/repo"
-	db "blog/repo/postgres"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -75,7 +74,7 @@ func (h *BlogServer) GetArticleById(w http.ResponseWriter, r *http.Request) {
 	q := id.String()
 	article, err := h.Service.GetArticleById(q)
 	if err != nil {
-		if errors.Is(err, db.ErrArticleNotFound) {
+		if errors.Is(err, repo.ErrArticleNotFound) {
 			http.Error(w, "Article not found.", http.StatusNotFound)
 			return
 		}
@@ -118,7 +117,7 @@ func (h *BlogServer) AddArticle(w http.ResponseWriter, r *http.Request) {
 	// add Author field in blog.authors table if not already exists
 	author, err := h.Service.GetAuthorByNameAndEmail(article.Author.Name, article.Author.Email)
 	if err != nil {
-		if errors.Is(err, db.ErrAuthorNotFound) {
+		if errors.Is(err, repo.ErrAuthorNotFound) {
 			article.Author.Id, err = h.Service.AddAuthor(article.Author)
 			if err != nil {
 				http.Error(w, "Service unavailable.", http.StatusServiceUnavailable)
@@ -163,7 +162,7 @@ func (h *BlogServer) DeleteArticleById(w http.ResponseWriter, r *http.Request) {
 
 	err = h.Service.DeleteArticleById(id.String())
 	if err != nil {
-		if errors.Is(err, db.ErrArticleNotFound) {
+		if errors.Is(err, repo.ErrArticleNotFound) {
 			http.Error(w, "Article not found.", http.StatusNotFound)
 			return
 		}
@@ -179,7 +178,7 @@ func (h *BlogServer) DeleteAuthorByNameAndEmail(w http.ResponseWriter, r *http.R
 
 	err := h.Service.DeleteAuthorByNameAndEmail(name, email)
 	if err != nil {
-		if errors.Is(err, db.ErrAuthorNotFound) {
+		if errors.Is(err, repo.ErrAuthorNotFound) {
 			http.Error(w, "Author not found.", http.StatusNotFound)
 			return
 		}
