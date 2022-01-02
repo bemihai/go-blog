@@ -3,7 +3,9 @@ package postgres
 import (
 	repo "blog/repo"
 	"blog/util/utildb"
+	"blog/util/utiltesting"
 	"database/sql"
+	"fmt"
 	"testing"
 	"time"
 
@@ -46,33 +48,45 @@ func createTestDB(tb testing.TB, connection string) (*sql.DB, string) {
 	require.NoError(tb, err, "Could not create blog schema")
 	require.NotEmpty(tb, schema, "Empty schema")
 
+	err = utildb.ExecFile(db, utiltesting.AbsolutePath("/blog/db/blog_migrate.sql"))
+	require.NoError(tb, err, "Could not create tables")
+
+	err = dumpTestData(db)
+	if err != nil {
+		panic(err)
+	}
+
 	tb.Cleanup(func() {
 		utildb.DropSchema(db, schema) // nolint: errcheck
 		db.Close()                    // nolint: errcheck
 	})
-
-	// err = utildb.ExecFile(db, utiltesting.AbsolutePath("/blog/sql/test.sql"))
-	// require.NoError(tb, err, "Could not create tables")
 
 	return db, schema
 }
 
 // truncateTables truncates tables in the given db.
 func truncateTables(t *testing.T, db *sql.DB) {
+	t.Helper()
 	_, err := db.Exec("DELETE FROM articles; DELETE FROM authors;")
 	require.NoError(t, err, "Could not truncate tables")
 }
 
 // dumpTestData dumps the test data to the given db.
-func dumpTestData(t *testing.T, db *sql.DB) {
-	t.Helper()
+func dumpTestData(db *sql.DB) error {
 
 	for _, art := range articles {
-		query := `INSERT INTO authors(id, name, email) values ($1, $2, $3)`
+
+		query := `INSERT INTO authors(id, name, email) values ($1, $2, $3);`
 		_, err := db.Exec(query, art.Author.Id, art.Author.Name, art.Author.Email)
-		require.NoError(t, err, "Could not add authors")
-		query = `INSERT INTO articles(id, title, body, author_id) values ($1, $2, $3, $4)`
+		if err != nil {
+			return fmt.Errorf("could not add authors: %w", err)
+		}
+
+		query = `INSERT INTO articles(id, title, body, author_id) values ($1, $2, $3, $4);`
 		_, err = db.Exec(query, art.Id, art.Title, art.Body, art.Author.Id)
-		require.NoError(t, err, "Could not add articles")
+		if err != nil {
+			return fmt.Errorf("could not add articles: %w", err)
+		}
 	}
+	return nil
 }

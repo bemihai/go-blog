@@ -2,7 +2,6 @@ package postgres
 
 import (
 	repo "blog/repo"
-	"fmt"
 
 	"testing"
 
@@ -10,23 +9,15 @@ import (
 )
 
 const (
-	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	password = "postgres"
-	dbname   = "blog"
+	connection = "postgres://localhost:5432/blog?user=postgres&password=postgres&sslmode=disable"
 )
-
-var connection = fmt.Sprintf("postgres://%s:%d/%s?user=%s&password=%s&sslmode=disable", host, port, dbname, user, password)
 
 func TestListArticles(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
-	truncateTables(t, db)
 
 	t.Run("table containing 2 entries", func(t *testing.T) {
-		dumpTestData(t, db)
 		articles, err := r.ListArticles()
 		require.NotEmpty(t, articles)
 		require.NoError(t, err)
@@ -40,22 +31,14 @@ func TestListArticles(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, articles, 0)
 	})
-
-	t.Run("closed connection", func(t *testing.T) {
-		db.Close()
-		_, err := r.ListArticles()
-		require.Error(t, err)
-	})
 }
 
 func TestListAuthors(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
-	truncateTables(t, db)
 
 	t.Run("table containing 2 entries", func(t *testing.T) {
-		dumpTestData(t, db)
 		authors, err := r.ListAuthors()
 		require.NotEmpty(t, authors)
 		require.NoError(t, err)
@@ -69,21 +52,12 @@ func TestListAuthors(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, authors, 0)
 	})
-
-	t.Run("closed connection", func(t *testing.T) {
-		db.Close()
-		_, err := r.ListAuthors()
-		require.Error(t, err)
-	})
-
 }
 
 func TestGetArticleById(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
-	truncateTables(t, db)
-	dumpTestData(t, db)
 
 	t.Run("existing article", func(t *testing.T) {
 		a, err := r.GetArticleById("b4a4de9e-2f52-4cf1-8907-3d828d403126")
@@ -107,8 +81,6 @@ func TestGetAuthorById(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
-	truncateTables(t, db)
-	dumpTestData(t, db)
 
 	t.Run("existing author", func(t *testing.T) {
 		a, err := r.GetAuthorById("b4a4de9e-2f52-4cf1-8907-3d828d403124")
@@ -132,8 +104,6 @@ func TestGetAuthorsByIds(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
-	truncateTables(t, db)
-	dumpTestData(t, db)
 
 	t.Run("existing authors", func(t *testing.T) {
 		ids := []string{"b4a4de9e-2f52-4cf1-8907-3d828d403124", "b4a4de9e-2f52-4cf1-8907-3d828d403125"}
@@ -155,8 +125,6 @@ func TestGetAuthorByNameAndEmail(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
-	truncateTables(t, db)
-	dumpTestData(t, db)
 
 	t.Run("existing author", func(t *testing.T) {
 		a, err := r.GetAuthorByNameAndEmail("Test Author1", "test.author1@email.com")
@@ -175,7 +143,6 @@ func TestAddAuthor(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
-	truncateTables(t, db)
 
 	t.Run("valid author", func(t *testing.T) {
 		id, err := r.AddAuthor(repo.Author{Name: "John Doe", Email: "john.doe@mail.com"})
@@ -191,8 +158,6 @@ func TestAddArticle(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
-	truncateTables(t, db)
-	dumpTestData(t, db)
 
 	t.Run("author id already in the table", func(t *testing.T) {
 		id, err := r.AddArticle(repo.Article{Title: "test", Body: "test", Author: repo.Author{Id: "b4a4de9e-2f52-4cf1-8907-3d828d403124"}})
@@ -213,8 +178,6 @@ func TestDeleteArticleById(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
-	truncateTables(t, db)
-	dumpTestData(t, db)
 
 	t.Run("existing article", func(t *testing.T) {
 		err := r.DeleteArticleById("b4a4de9e-2f52-4cf1-8907-3d828d403126")
@@ -225,20 +188,12 @@ func TestDeleteArticleById(t *testing.T) {
 		err := r.DeleteArticleById("b4a4de9e-2f52-4cf1-8907-3d828d403128")
 		require.ErrorIs(t, err, ErrArticleNotFound)
 	})
-
-	t.Run("closed connection", func(t *testing.T) {
-		db.Close()
-		err := r.DeleteArticleById("b4a4de9e-2f52-4cf1-8907-3d828d403126")
-		require.Error(t, err)
-	})
 }
 
 func TestDeleteAuthorById(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
-	truncateTables(t, db)
-	dumpTestData(t, db)
 
 	t.Run("existing author", func(t *testing.T) {
 		err := r.DeleteAuthorById("b4a4de9e-2f52-4cf1-8907-3d828d403124")
@@ -249,20 +204,12 @@ func TestDeleteAuthorById(t *testing.T) {
 		err := r.DeleteAuthorById("b4a4de9e-2f52-4cf1-8907-3d828d403128")
 		require.ErrorIs(t, err, ErrAuthorNotFound)
 	})
-
-	t.Run("closed connection", func(t *testing.T) {
-		db.Close()
-		err := r.DeleteAuthorById("b4a4de9e-2f52-4cf1-8907-3d828d403124")
-		require.Error(t, err)
-	})
 }
 
 func TestDeleteAuthorByNameAndEmail(t *testing.T) {
 
 	db, _ := createTestDB(t, connection)
 	r := PSQLRepository{DB: db}
-	truncateTables(t, db)
-	dumpTestData(t, db)
 
 	t.Run("existing article", func(t *testing.T) {
 		err := r.DeleteAuthorByNameAndEmail("Test Author1", "test.author1@email.com")
@@ -272,11 +219,5 @@ func TestDeleteAuthorByNameAndEmail(t *testing.T) {
 	t.Run("non-existing article", func(t *testing.T) {
 		err := r.DeleteAuthorByNameAndEmail("Do not exist", "Do not exist")
 		require.ErrorIs(t, err, ErrAuthorNotFound)
-	})
-
-	t.Run("closed connection", func(t *testing.T) {
-		db.Close()
-		err := r.DeleteAuthorByNameAndEmail("Test Author1", "test.author1@email.com")
-		require.Error(t, err)
 	})
 }
