@@ -1,4 +1,4 @@
-name: Go
+name: Go Test
 
 on:
   push:
@@ -15,9 +15,9 @@ jobs:
       postgres:
         image: postgres:12-alpine
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: blog
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER_TEST }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD_TEST }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB_TEST }}
         ports:
           - 5432:5432
         options: >-
