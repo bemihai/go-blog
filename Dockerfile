@@ -14,6 +14,7 @@ COPY  --from=builder /app/migrate.linux-amd64 ./migrate
 COPY start.sh .
 COPY wait-for.sh .
 COPY db/migration ./migration
+COPY docker_config.json .
 
 EXPOSE 8080
 CMD [ "/app/main" ]

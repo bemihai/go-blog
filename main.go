@@ -10,7 +10,7 @@ import (
 func main() {
 
 	// get config
-	config := util.LoadConfig("prod_config.json")
+	config := util.LoadConfig("docker_config.json")
 	source := util.GetDBSource(config)
 
 	log.Println(source)
